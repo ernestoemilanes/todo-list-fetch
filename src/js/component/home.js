@@ -1,27 +1,24 @@
-import React from "react";
+import React, { useState } from "react";
 
 //create your first component
-export class Home extends React.Component {
-	constructor() {
-		super();
-		this.state = {
-			contacts: [],
-			input: "",
-			userName: ""
-		};
-	}
+export function Home() {
+	const [state, setState] = useState({
+		contacts: [{ label: "make the bed", done: false }],
+		input: "",
+		userName: ""
+	});
 
-	addListItems = e => {
+	const addListItems = e => {
 		let key = e.which || e.keyCode || 0;
 		if (key !== 13) {
 			return;
 		} else {
-			let newContacts = this.state.contacts;
-			let newObject = { label: this.state.input, done: false };
+			let newContacts = state.contacts;
+			let newObject = { label: state.input, done: false };
 			newContacts.push(newObject);
 			fetch(
 				"https://assets.breatheco.de/apis/fake/todos/user/" +
-					this.state.userName,
+					state.userName,
 				{
 					method: "PUT",
 					body: JSON.stringify(newContacts),
@@ -33,7 +30,7 @@ export class Home extends React.Component {
 				.then(newRes => newRes.text())
 				.then(response => {
 					console.log(response);
-					this.setState({
+					setState({
 						contacts: newContacts,
 						input: ""
 					});
@@ -42,12 +39,12 @@ export class Home extends React.Component {
 		}
 	};
 
-	deleteListItems = index => {
-		let updatedContacts = this.state.contacts;
+	const deleteListItems = index => {
+		let updatedContacts = state.contacts;
 		updatedContacts[index].done = true;
 		fetch(
 			"https://assets.breatheco.de/apis/fake/todos/user/" +
-				this.state.userName,
+				state.userName,
 			{
 				method: "PUT",
 				body: JSON.stringify(updatedContacts),
@@ -59,30 +56,30 @@ export class Home extends React.Component {
 			.then(newRes => newRes.text())
 			.then(response => {
 				console.log(response);
-				this.setState({
+				setState({
 					contacts: updatedContacts
 				});
 			})
 			.catch(error => console.error("Error:", error));
 	};
 
-	updateUserName = e => {
+	const updateUserName = e => {
 		let key = e.which || e.keyCode || 0;
 		if (key !== 13) {
 			return;
 		} else {
 			fetch(
 				"https://assets.breatheco.de/apis/fake/todos/user/" +
-					this.state.userName
+					state.userName
 			)
 				.then(newRes => newRes.json())
 				.then(nob => {
 					if (Array.isArray(nob) === true) {
-						this.setState({ contacts: nob });
+						setState({ contacts: nob });
 					} else {
 						fetch(
 							"https://assets.breatheco.de/apis/fake/todos/user/" +
-								this.state.userName,
+								state.userName,
 							{
 								method: "POST",
 								body: JSON.stringify([]),
@@ -90,46 +87,44 @@ export class Home extends React.Component {
 									"Content-Type": "application/json"
 								}
 							}
-						).then(() => this.setState({ contacts: [] }));
+						).then(() => setState({ contacts: [] }));
 					}
 				});
 		}
 	};
 
-	render() {
-		return (
-			<div className="fullPage">
-				<div className="header">
-					<h1>todos</h1>
+	return (
+		<div className="fullPage">
+			<div className="header">
+				<h1>todos</h1>
+			</div>
+			<div className="userNameChanger">
+				<div className="userNameLabel">
+					<h3>Username:</h3>
 				</div>
-				<div className="userNameChanger">
-					<div className="userNameLabel">
-						<h3>Username:</h3>
-					</div>
-					<div className="userNameInput">
-						<input
-							id="addUser"
-							type="text"
-							placeholder="What is your username?"
-							onKeyPress={this.updateUserName}
-							value={this.state.userName}
-							onChange={e =>
-								this.setState({ userName: e.target.value })
-							}
-						/>
-					</div>
-				</div>
-				<div className="container">
+				<div className="userNameInput">
 					<input
-						id="addItem"
+						id="addUser"
 						type="text"
-						placeholder="What needs to be done?"
-						onKeyPress={this.addListItems}
-						value={this.state.input}
-						onChange={e => this.setState({ input: e.target.value })}
+						placeholder="What is your username?"
+						onChange={e =>
+							setState({ ...state, userName: e.target.value })
+						}
 					/>
-					<ul>
-						{this.state.contacts.map((item, index) => {
+				</div>
+			</div>
+			<div className="container">
+				<input
+					id="addItem"
+					type="text"
+					placeholder="What needs to be done?"
+					onKeyPress={addListItems}
+					value={state.input}
+					onChange={e => setState({ input: e.target.value })}
+				/>
+				<ul>
+					{state.contacts &&
+						state.contacts.map((item, index) => {
 							return (
 								<li className="flexItems" key={index}>
 									<div className="listItem">
@@ -138,7 +133,7 @@ export class Home extends React.Component {
 									<div className="deleter">
 										<span
 											onClick={() =>
-												this.deleteListItems(index)
+												deleteListItems(index)
 											}>
 											x
 										</span>
@@ -146,14 +141,9 @@ export class Home extends React.Component {
 								</li>
 							);
 						})}
-						<li id="counter">
-							{this.state.contacts.length === 1
-								? this.state.contacts.length + " total item"
-								: this.state.contacts.length + " total items"}
-						</li>
-					</ul>
-				</div>
+					<li id="counter">{state.contacts.length}</li>
+				</ul>
 			</div>
-		);
-	}
+		</div>
+	);
 }
